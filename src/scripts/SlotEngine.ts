@@ -27,15 +27,16 @@ export class SlotEngine {
         const center1 = symbols[1][1]
         const center2 = symbols[2][1]
 
+        const awards = AWARDS_SIZE as Record<number, { doumble: number; triple: number }>
         if (center0 === center1 && center1 === center2) {
-            win = AWARDS_SIZE[center0]["triple"]
+            win = awards[center0].triple
         } else if (center0 === center1 || center1 === center2 || center0 === center2) {
             if (center0 === center1) {
-                win = AWARDS_SIZE[center0]["doumble"]
+                win = awards[center0].doumble
             } else if (center1 === center2) {
-                win = AWARDS_SIZE[center1]["doumble"]
+                win = awards[center1].doumble
             } else {
-                win = AWARDS_SIZE[center0]["doumble"]
+                win = awards[center0].doumble
             }
         }
 

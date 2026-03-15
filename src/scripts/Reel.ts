@@ -3,8 +3,7 @@ import {
     Container,
     Graphics,
     Sprite,
-    Texture,
-    Ticker
+    Texture
 } from "pixi.js"
 import {ROW_HEIGHT, REEL_VIEW_HEIGHT, SYMBOL_SIZE} from "./settings.ts"
 
@@ -111,8 +110,10 @@ export class Reel {
 
         let wrapCount = 0
 
-        const tickerFn = (tickerInstance: Ticker) => {
-            const deltaMs = Math.min(Math.max(tickerInstance.deltaMS, 8), 40)
+        const tickerFn = (deltaTime: number) => {
+            // Pixi 7 ticker passes deltaTime (~1 per frame), not ms.
+            const raw = (deltaTime > 0 && deltaTime < 100) ? deltaTime * (1000 / 60) : 16
+            const deltaMs = Math.min(Math.max(raw, 8), 40)
             const move = Reel.SPIN_SPEED_PX_MS * deltaMs
 
             // Прокрутка вниз — увеличиваем смещение

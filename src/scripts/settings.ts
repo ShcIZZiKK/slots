@@ -79,10 +79,20 @@ export const DECORATIONS = {
     "sunlight": "sunlight"
 }
 
-export const CHARACTER_COUNT_ANIMATION = {
-    "idle": 6,
-    "win": 13
-}
+/** Адаптив: размер «дизайна» (2K), всё масштабируется под экран. */
+export const LAYOUT_DESIGN_WIDTH = 2560
+export const LAYOUT_DESIGN_HEIGHT = 1440
+/** При ширине экрана ≤ этого значения персонаж скрывается (планшет и меньше). */
+export const LAYOUT_TABLET_MAX_WIDTH = 1024
+/** Горизонтальный планшет: при высоте ≤ этого в landscape масштаб по высоте (крупнее, обрез по бокам). Выше — обычный fit (1920×1200, Full HD, 2K). */
+export const LAYOUT_SHORT_LANDSCAPE_MAX_HEIGHT = 1080
+
+/** Имена анимаций в Spine-экспорте (должны совпадать с именами в редакторе Spine). Один скелет в папке character с анимациями idle, wait, win. */
+export const CHARACTER_SPINE_ANIMATIONS = {
+    idle: "idle",
+    wait: "wait",
+    win: "win"
+} as const
 
 export const REEL_STRIPS: number[][] = [
     [0, 2, 4, 1, 3, 7, 10, 8, 5, 2, 9, 4],
