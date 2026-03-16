@@ -14,6 +14,7 @@ import { Reel } from "./Reel.ts"
 import { SlotEngine } from "./SlotEngine.ts"
 import "@esotericsoftware/spine-pixi-v7"
 import { Character, type CharacterSpineAssets } from "./Character.ts"
+import { AudioManager } from "./AudioManager.ts"
 import { SYMBOL_NAMES, REEL_COUNT, REEL_STRIPS, DECORATIONS, CHARACTER_SPINE_ANIMATIONS, LAYOUT_DESIGN_WIDTH, LAYOUT_DESIGN_HEIGHT, LAYOUT_TABLET_MAX_WIDTH, LAYOUT_SHORT_LANDSCAPE_MAX_HEIGHT } from "./settings.ts"
 
 /**
@@ -185,7 +186,7 @@ export class SlotGame {
     /**
      * Создаёт экземпляр игры: инициализирует Pixi, загружает ассеты, строит UI и сцену
      * @param root — HTML-элемент, в который вставляется канвас
-     * @param options.onProgress — колбэк прогресса загрузки (percent 0–100, label)
+     * @param options.onProgress — колбэк прогресса загрузки (percent 0-100, label)
      * @returns Экземпляр SlotGame после полной загрузки
      */
     static async create(
@@ -224,12 +225,12 @@ export class SlotGame {
     }
 
     /**
-     * Загружает текстуры символов, декораций и Spine-персонажа
-     * При наличии onProgress вызывает его по ходу загрузки
+     * Загружает текстуры символов, декораций, Spine-персонажа и звуки.
+     * При наличии onProgress вызывает его по ходу загрузки.
      */
     private async loadAssets(onProgress?: (percent: number, label: string) => void) {
-        // Общее количество шагов загрузки
-        const totalSteps = SYMBOL_NAMES.length + Object.keys(DECORATIONS).length + 3
+        const audioSteps = 5
+        const totalSteps = SYMBOL_NAMES.length + Object.keys(DECORATIONS).length + 3 + audioSteps
         let step = 0
 
         const report = (label: string) => {
@@ -306,6 +307,11 @@ export class SlotGame {
         const skeletonData = parser.readSkeletonData(skeletonJson)
 
         this.characterSpineData = { skeletonData }
+
+        // Звуки
+        report("Звуки...")
+
+        await AudioManager.loadAll((label) => report(label))
 
         report("Готово")
     }
@@ -397,7 +403,10 @@ export class SlotGame {
 
         this.buttonSpin.cursor = 'pointer'
         this.buttonSpin.eventMode = 'static';
-        this.buttonSpin.on('pointerdown', this.spin.bind(this));
+        this.buttonSpin.on('pointerdown', () => {
+            AudioManager.playSpinButton()
+            this.spin()
+        })
 
 
         this.buttonSpinText = new Text("КРУТИТЬ", {fill: 0xffffff, fontSize: 40, fontWeight: "bold"})
@@ -507,7 +516,7 @@ export class SlotGame {
         root.addChild(betText)
     }
 
-    /** Один спин: списывает ставку, запускает анимацию wait, крутит барабаны через engine.spin() и animate */
+    /** Один спин: списывает ставку, запускает анимацию wait и звук, крутит барабаны через engine.spin() и animate */
     private spin() {
         if (this.balance < this.bet) {
             return
@@ -519,11 +528,14 @@ export class SlotGame {
 
         const result = this.engine.spin()
 
-        // Показываем персонажа на десктопе
+        // Анимация персонажа только на десктопе
         if (this.app.screen.width > LAYOUT_TABLET_MAX_WIDTH) {
             this.character.playWait()
         }
-        
+
+        AudioManager.playBackground()
+        AudioManager.startSpinLoop()
+
         this.animate(result)
     }
 
@@ -540,12 +552,14 @@ export class SlotGame {
         })
     }
 
-    /** Вызывается по остановке каждого барабана; когда остановились все — начисляет выигрыш */
+    /** Вызывается по остановке каждого барабана; когда остановились все — останавливает звук спина и начисляет выигрыш */
     private checkStop(result: SpinResult) {
         this.stopped++
 
         if (this.stopped === REEL_COUNT) {
             this.stopped = 0
+
+            AudioManager.stopSpinLoop()
 
             if (result.win > 0) {
                 this.balance += result.win
@@ -560,12 +574,16 @@ export class SlotGame {
                 if (this.app.screen.width > LAYOUT_TABLET_MAX_WIDTH) {
                     this.character.playWin()
                 }
+
+                AudioManager.playWin()
             } else {
                 this.resultText.text = "Нет выигрыша"
 
                 if (this.app.screen.width > LAYOUT_TABLET_MAX_WIDTH) {
                     this.character.playIdle()
                 }
+
+                AudioManager.playLose()
             }
 
             // Обновляем UI

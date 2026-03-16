@@ -10,12 +10,14 @@
     "deploy": "gh-pages -d dist"
   },
   "devDependencies": {
+    "@types/howler": "^2.2.12",
     "typescript": "~5.9.3",
     "vite": "^7.3.1"
   },
   "dependencies": {
     "@esotericsoftware/spine-pixi-v7": "~4.2.0",
     "gh-pages": "^6.3.0",
+    "howler": "^2.2.4",
     "pixi.js": "^7.4.3"
   }
 }
