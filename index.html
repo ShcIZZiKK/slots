@@ -5,10 +5,34 @@
     <link rel="icon" type="image/svg+xml" href="/slots/vite.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>slots</title>
-    <script type="module" crossorigin src="/slots/assets/index-svf3e0TS.js"></script>
+    <style>
+      #loader-overlay {
+        position: fixed; inset: 0; z-index: 10000;
+        display: flex; align-items: center; justify-content: center;
+        background: linear-gradient(180deg, #2d1b4e 0%, #483D8B 100%);
+        transition: opacity 0.4s ease-out;
+      }
+      #loader-overlay.hidden { opacity: 0; pointer-events: none; }
+      .loader-content { text-align: center; padding: 2rem; min-width: 280px; }
+      .loader-title { color: #f5f5ff; font-size: 1.5rem; font-weight: 700; margin-bottom: 1.25rem; }
+      .loader-bar { height: 8px; background: rgba(255,255,255,0.2); border-radius: 4px; overflow: hidden; margin-bottom: 0.75rem; }
+      .loader-fill { height: 100%; width: 0%; background: linear-gradient(90deg, #ff8f3c, #ff4b7d); border-radius: 4px; transition: width 0.2s ease-out; }
+      .loader-label { color: rgba(245,245,255,0.85); font-size: 0.9rem; }
+    </style>
+    <script type="module" crossorigin src="/slots/assets/index-RLskPyPG.js"></script>
     <link rel="stylesheet" crossorigin href="/slots/assets/index-KnEOPuBk.css">
   </head>
   <body>
+    <div id="loader-overlay" class="loader-overlay">
+      <div class="loader-content">
+        <div class="loader-title">Загрузка игры</div>
+        <div class="loader-bar"><div class="loader-fill" id="loader-fill"></div></div>
+        <div class="loader-label" id="loader-label">Подготовка...</div>
+      </div>
+    </div>
     <div id="app"></div>
+    <script>
+      (function(){ var g = typeof window !== 'undefined' ? window : self; try { if (typeof g.safari === 'undefined') g.safari = {}; } catch(e){} })();
+    </script>
   </body>
 </html>
