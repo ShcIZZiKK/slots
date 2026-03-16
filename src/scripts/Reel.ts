@@ -7,24 +7,46 @@ import {
 } from "pixi.js"
 import {ROW_HEIGHT, REEL_VIEW_HEIGHT, SYMBOL_SIZE} from "./settings.ts"
 
+/**
+ * Один барабан слотов: лента символов с маской, прокрутка до заданной остановки
+ */
 export class Reel {
+    /** Контейнер барабана */
     public container = new Container()
+    /** Контейнер символов */
     private symbolsContainer = new Container()
     private app: Application
+    /** Индексы символов ленты */
     private strip: number[]
+    /** Текстуры символов */
     private textures: Texture[]
-    /** Все слоты ленты созданы заранее, текстуры не меняются во время спина */
+    /** Слоты символов */
     private symbols: Sprite[] = []
-    /** Смещение ленты по Y (прокрутка); при спинe только меняется он */
+    /** Смещение ленты по Y (прокрутка) */
     private scrollOffset = 0
+    /** Высота панели */
+    private panelHeight: number
+    /** Скорость прокрутки (пикселей/мс) */
+    private static readonly SPIN_SPEED_PX_MS = 165 / 80
 
-    static createReels(_panel: Graphics): void {}
+    /** Ширина барабана */
+    private static readonly REEL_WIDTH = 110
 
-    /** Вертикальный центр видимой области барабана в локальных координатах container (для центрирования на панели) */
+    /**
+     * Вертикальный центр видимой области барабана в локальных координатах container (для центрирования на панели)
+     * @param panelHeight — высота панели в пикселях
+     * @returns Y центра видимой области
+     */
     static getVisibleCenterY(panelHeight: number): number {
         return panelHeight / 2
     }
 
+    /**
+     * @param app — экземпляр Pixi Application
+     * @param textures — массив текстур символов (индекс = индекс символа)
+     * @param strip — лента: массив индексов символов по порядку
+     * @param options.panelHeight — высота панели для центрирования видимой области
+     */
     constructor(
         app: Application,
         textures: Texture[],
@@ -39,38 +61,41 @@ export class Reel {
         this.create()
     }
 
-    private panelHeight: number
-
-    private static readonly REEL_WIDTH = 110
-
+    /** Создаёт ленту символов */
     private create() {
         const maskY = ROW_HEIGHT - SYMBOL_SIZE / 2
         const effectiveViewHeight = REEL_VIEW_HEIGHT
         const mask = new Graphics()
+
         mask.beginFill(0xffffff)
         mask.drawRect(0, maskY, Reel.REEL_WIDTH, effectiveViewHeight)
         mask.endFill()
+
         this.symbolsContainer.addChild(mask)
         this.symbolsContainer.mask = mask
 
         const panelCenterY = this.panelHeight / 2
         const visibleCenterY = maskY + effectiveViewHeight / 2
+
+        // Центрирование ленты символов на панели
         this.symbolsContainer.y = panelCenterY - visibleCenterY
 
         const centerX = Reel.REEL_WIDTH / 2
         const len = this.strip.length
 
-        // Заранее создаём все слоты ленты по strip — без генерации на лету
+        // Заранее создаём все слоты ленты
         for (let i = 0; i < len; i++) {
             const texture = this.textures[this.strip[i]]
-            const s = new Sprite(texture)
-            s.anchor.set(0.5)
-            s.width = SYMBOL_SIZE * 0.9
-            s.height = SYMBOL_SIZE * 0.9
-            s.x = centerX
-            s.y = i * ROW_HEIGHT
-            this.symbolsContainer.addChild(s)
-            this.symbols.push(s)
+            const sprite = new Sprite(texture)
+
+            sprite.anchor.set(0.5)
+            sprite.width = SYMBOL_SIZE * 0.9
+            sprite.height = SYMBOL_SIZE * 0.9
+            sprite.x = centerX
+            sprite.y = i * ROW_HEIGHT
+            
+            this.symbolsContainer.addChild(sprite)
+            this.symbols.push(sprite)
         }
 
         this.container.addChild(this.symbolsContainer)
@@ -82,36 +107,40 @@ export class Reel {
         return this.strip.length * ROW_HEIGHT
     }
 
-    /** Выставить Y всем слотам по текущему scrollOffset; позиции по модулю цикла — лента всегда заполняет экран */
+    /** Выставляет Y всем слотам по текущему scrollOffset */
     private applyScrollOffset() {
-        const len = this.symbols.length
+        const length = this.symbols.length
         const cycle = this.cycle
-        for (let i = 0; i < len; i++) {
+
+        for (let i = 0; i < length; i++) {
             const y = (i * ROW_HEIGHT + this.scrollOffset) % cycle
+
             this.symbols[i].y = y < 0 ? y + cycle : y
         }
-        // Порядок отрисовки по Y — сортируем копию, не сам массив (symbols[i] должен соответствовать strip[i])
-        const byY = [...this.symbols].sort((a, b) => a.y - b.y)
-        byY.forEach((s, i) => this.symbolsContainer.setChildIndex(s, i))
+
+        // Порядок отрисовки по Y
+        const symbolsByY = [...this.symbols].sort((a, b) => a.y - b.y)
+
+        symbolsByY.forEach((symbol, index) => this.symbolsContainer.setChildIndex(symbol, index))
     }
 
-    /** Пикселей в миллисекунду (~2 с на 3 оборота) */
-    private static readonly SPIN_SPEED_PX_MS = 165 / 80
-
+    /**
+     * Запускает прокрутку до остановки на заданном индексе по центральной линии
+     * @param stop — индекс символа в strip, который должен оказаться на центральной линии после остановки (учитывается strip[stop+2])
+     * @param done — колбэк по завершении анимации
+     */
     spinTo(stop: number, done: () => void) {
-        const len = this.strip.length
-        const cycle = len * ROW_HEIGHT
+        const length = this.strip.length
+        const cycle = length * ROW_HEIGHT
         const centerRowY = 2 * ROW_HEIGHT
         const minWraps = 3
-
-        // Целевое смещение (в [0, cycle)): по центральной линии должен быть strip[stop+2]
-        const targetOffset =
-            (centerRowY - (stop + 2) * ROW_HEIGHT + cycle) % cycle
-
         let wrapCount = 0
 
+        // Целевое смещение по центральной линии должен быть strip[stop+2]
+        const targetOffset = (centerRowY - (stop + 2) * ROW_HEIGHT + cycle) % cycle
+
         const tickerFn = (deltaTime: number) => {
-            // Pixi 7 ticker passes deltaTime (~1 per frame), not ms.
+            // Pixi 7 тикер передаёт deltaTime (~1 за кадр), не в мс. Преобразуем в мс
             const raw = (deltaTime > 0 && deltaTime < 100) ? deltaTime * (1000 / 60) : 16
             const deltaMs = Math.min(Math.max(raw, 8), 40)
             const move = Reel.SPIN_SPEED_PX_MS * deltaMs
@@ -121,16 +150,21 @@ export class Reel {
 
             if (this.scrollOffset >= cycle) {
                 this.scrollOffset -= cycle
+
+                // Счётчик оборотов
                 wrapCount++
             }
 
+            // Выставляем Y всем слотам по текущему scrollOffset
             this.applyScrollOffset()
 
             const reached = wrapCount >= minWraps && this.scrollOffset >= targetOffset - 0.5
+
             if (reached) {
                 this.app.ticker.remove(tickerFn)
                 this.scrollOffset = targetOffset
                 this.applyScrollOffset()
+                
                 done()
             }
         }

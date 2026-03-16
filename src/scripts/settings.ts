@@ -1,7 +1,14 @@
+/**
+ * Конфигурация слот-игры: размеры, символы, призы, ленты барабанов, адаптив, Spine-анимации
+ */
+
+/** Количество барабанов */
 export const REEL_COUNT = 3
 
+/** Количество видимых рядов на линии выигрыша */
 export const ROWS = 3
 
+/** Размер одного символа (пиксели) */
 export const SYMBOL_SIZE = 100
 
 /** Отступ по вертикали между символами (слотами) */
@@ -10,14 +17,16 @@ export const ROW_GAP = 0
 /** Высота одной строки: символ + отступ */
 export const ROW_HEIGHT = SYMBOL_SIZE + ROW_GAP
 
-/** Высота видимой области барабана: от верха 1-го до низа 3-го ряда (без части 4-го) */
+/** Высота видимой области барабана: от верха 1-го до низа 3-го ряда */
 export const REEL_VIEW_HEIGHT = 2 * ROW_HEIGHT + SYMBOL_SIZE
 
+/** Имена файлов символов? индекс совпадает с ключами AWARDS_SIZE */
 export const SYMBOL_NAMES = [
     "apple", "bell", "cherry", "clover", "coin", "diamond",
     "heart", "horseshoe", "lemon", "plum", "seven", "watermelon"
 ]
 
+/** Выигрыши по индексу символа: пара и тройка на линии */
 export const AWARDS_SIZE = {
     "0": {
         "doumble": 10,
@@ -69,6 +78,7 @@ export const AWARDS_SIZE = {
     }
 }
 
+/** Ключи декораций (фоны, кнопка, панель, призы, солнечный свет) */
 export const DECORATIONS = {
     "background": "background",
     "button": "button",
@@ -79,21 +89,24 @@ export const DECORATIONS = {
     "sunlight": "sunlight"
 }
 
-/** Адаптив: размер «дизайна» (2K), всё масштабируется под экран. */
+/** Адаптив: размер «дизайна» (2K) */
 export const LAYOUT_DESIGN_WIDTH = 2560
 export const LAYOUT_DESIGN_HEIGHT = 1440
-/** При ширине экрана ≤ этого значения персонаж скрывается (планшет и меньше). */
+
+/** При ширине экрана ≤ этого значения персонаж скрывается */
 export const LAYOUT_TABLET_MAX_WIDTH = 1024
-/** Горизонтальный планшет: при высоте ≤ этого в landscape масштаб по высоте (крупнее, обрез по бокам). Выше — обычный fit (1920×1200, Full HD, 2K). */
+
+/** Горизонтальный планшет */
 export const LAYOUT_SHORT_LANDSCAPE_MAX_HEIGHT = 1080
 
-/** Имена анимаций в Spine-экспорте (должны совпадать с именами в редакторе Spine). Один скелет в папке character с анимациями idle, wait, win. */
+/** Имена анимаций в Spine-экспорте (должны совпадать с именами в редакторе Spine) */
 export const CHARACTER_SPINE_ANIMATIONS = {
     idle: "idle",
     wait: "wait",
     win: "win"
 } as const
 
+/** Ленты барабанов: для каждого барабана — массив индексов символов (порядок сверху вниз) */
 export const REEL_STRIPS: number[][] = [
     [0, 2, 4, 1, 3, 7, 10, 8, 5, 2, 9, 4],
     [2, 4, 6, 3, 1, 7, 10, 5, 8, 2, 11, 4],

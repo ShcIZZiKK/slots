@@ -37,10 +37,11 @@ body {
 .background-gold {
     width: 100%;
     height: auto;
-    position: absolute;
-    bottom: -100px;
+    position: fixed;
+    bottom: -7vh;
     left: 0;
     z-index: 1;
+    pointer-events: none;
 }
 
 .background-gold img {
@@ -50,43 +51,23 @@ body {
     object-position: center;
 }
 
-button {
-    position: absolute;
-    bottom: 2rem;
-    left: 50%;
-    transform: translateX(-50%);
-    border-radius: 999px;
-    border: 0;
-    padding: 0.8em 1.8em;
-    font-size: 1rem;
-    font-weight: 600;
-    font-family: inherit;
-    letter-spacing: 0.08em;
-    text-transform: uppercase;
-    background: linear-gradient(135deg, #ff8f3c, #ff4b7d);
-    color: #ffffff;
-    cursor: pointer;
-    transition: transform 0.08s ease-out,
-    box-shadow 0.15s ease-out,
-    filter 0.15s ease-out,
-    opacity 0.2s ease-out;
-    box-shadow: 0 12px 30px rgba(255, 120, 80, 0.6);
-    z-index: 2;
+@media (min-height: 1081px) and (max-height: 1439px) {
+    .background-gold {
+        bottom: -1vh;
+    }
 }
 
-button:hover:not(:disabled) {
-    transform: translate(-50%, -1px);
-    filter: brightness(1.05);
-    box-shadow: 0 16px 40px rgba(255, 120, 80, 0.8);
+
+@media (orientation: landscape) and (min-height: 500px) and (max-height: 1080px) {
+    .background-gold {
+        bottom: -5vh;
+    }
 }
 
-button:active:not(:disabled) {
-    transform: translate(-50%, 1px) scale(0.98);
-    box-shadow: 0 8px 20px rgba(255, 120, 80, 0.5);
-}
-
-button:disabled {
-    opacity: 0.6;
-    cursor: default;
-    box-shadow: none;
+@media (orientation: portrait) and (max-width: 767px) {
+    .background-gold {
+        bottom: -1vh;
+        height: 100px;
+        width: auto;
+    }
 }
